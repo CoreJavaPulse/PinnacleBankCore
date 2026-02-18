@@ -1,38 +1,52 @@
-
 import java.util.Scanner;
-
 import service.BankServices;
+import ui.InputHandler;
 
 public class BankMain {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        BankServices bankServicesobj = new BankServices();
-        String str = null;
+        BankServices bank = new BankServices();
+        InputHandler input = new InputHandler(sc);
         
+        String cont;
         do {
-            System.out.println("---------------------Main Menu--------------------");
-            System.out.println("1:Add Account\n2:Display All\n3:Search Account\n" +
-                              "4:Transaction\n5:Update\n6:Delete\n7:Interest\n8:Statement");
-            System.out.print("Choose (1-8): ");
+            showMenu();
+            int choice = input.getInt("Choose (1-8): ", 1, 8);
             
-            int ch = sc.nextInt();
-            switch(ch) {
-                case 1: bankServicesobj.addAccount(); break;
-                case 2: bankServicesobj.displayAllAccounts(); break;
-                case 3: bankServicesobj.searchAccount(); break;
-                case 4: bankServicesobj.transaction(); break;
-                case 5: bankServicesobj.updateAccount(); break;
-                case 6: bankServicesobj.deleteAccount(); break;
-                case 7: bankServicesobj.addInterestToAllAccounts(); break;
-                case 8: bankServicesobj.viewStatement(); break; 
-                default: System.out.println("Invalid! Choose 1-8"); break;
+            try {
+                switch (choice) {
+                    case 1 -> bank.addAccount(input);
+                    case 2 -> bank.displayAllAccounts();
+                    case 3 -> input.search(bank);
+                    case 4 -> input.transaction(bank);
+                    case 5 -> input.update(bank);
+                    case 6 -> input.delete(bank);
+                    case 7 -> bank.addInterestToAllAccounts();
+                    case 8 -> input.statement(bank);
+                    default -> System.out.println("Invalid choice!");
+                }
+            } catch (Exception e) {
+                System.out.println("❌ " + e.getMessage());
             }
             
-            System.out.print("Continue? (yes/no): ");
-            str = sc.next();
-        } while(str.equalsIgnoreCase("yes"));
+            cont = input.getString("Continue? (yes/no): ");
+        } while ("yes".equalsIgnoreCase(cont));
         
         sc.close();
         System.out.println("--------------------Thank You--------------------");
+    }
+    
+    private static void showMenu() {
+        System.out.println("""
+            ---------------------Main Menu--------------------
+            1:Add Account
+            2:Display All
+            3:Search Account
+            4:Transaction
+            5:Update
+            6:Delete
+            7:Interest
+            8:Statement
+            -----------------------------------------------""");
     }
 }

@@ -8,8 +8,10 @@ import exceptions.InvalidAmountException;
 import model.enums.AccountType;
 import model.enums.TransactionType;
 
-
-
+/**
+ * Abstract base class for all bank accounts.
+ * Provides common functionality: deposit, withdraw, transactions, interest.
+ */
 public abstract class Account implements BankAccount {
     
     // 1. Fields (private, final first)
@@ -73,6 +75,9 @@ public abstract class Account implements BankAccount {
         return new ArrayList<>(transactions); // Defensive copy
     }
     
+    /**
+     * Prints last N transactions in table format
+     */
     public void printStatement(int count) {
         System.out.println("\n=== LAST " + count + " TRANSACTIONS ===");
         System.out.println("Date      | Type      | Amount   | Balance  | Desc");
@@ -90,8 +95,14 @@ public abstract class Account implements BankAccount {
     }
     
     // 6. Interest Management (Abstract method + utility)
+    /**
+     * Subclasses must implement interest calculation logic
+     */
     public abstract double calculateInterest();
     
+    /**
+     * Adds calculated interest to balance and records transaction
+     */
     public final void addInterestToBalance() {
         double interest = calculateInterest();
         if (interest > 0) {
@@ -102,7 +113,7 @@ public abstract class Account implements BankAccount {
         }
     }
     
-    // 7. toString() - Last
+    // 7. toString() - Professional format
     @Override
     public String toString() {
         return String.format("AccNo=%d, IFSC=%s, Bal=₹%.2f, Type=%s", 

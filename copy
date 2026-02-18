@@ -1,0 +1,938 @@
+
+import java.util.Scanner;
+
+import service.BankServices;
+
+public class BankMain {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        BankServices bankServicesobj = new BankServices();
+        String str = null;
+        
+        do {
+            System.out.println("---------------------Main Menu--------------------");
+            System.out.println("1:Add Account\n2:Display All\n3:Search Account\n" +
+                              "4:Transaction\n5:Update\n6:Delete\n7:Interest\n8:Statement");
+            System.out.print("Choose (1-8): ");
+            
+            int ch = sc.nextInt();
+            switch(ch) {
+                case 1: bankServicesobj.addAccount(); break;
+                case 2: bankServicesobj.displayAllAccounts(); break;
+                case 3: bankServicesobj.searchAccount(); break;
+                case 4: bankServicesobj.transaction(); break;
+                case 5: bankServicesobj.updateAccount(); break;
+                case 6: bankServicesobj.deleteAccount(); break;
+                case 7: bankServicesobj.addInterestToAllAccounts(); break;
+                case 8: bankServicesobj.viewStatement(); break; 
+                default: System.out.println("Invalid! Choose 1-8"); break;
+            }
+            
+            System.out.print("Continue? (yes/no): ");
+            str = sc.next();
+        } while(str.equalsIgnoreCase("yes"));
+        
+        sc.close();
+        System.out.println("--------------------Thank You--------------------");
+    }
+}
+package exceptions;
+
+public class AccountNotFoundException  extends Exception{
+
+	public AccountNotFoundException(int idoraccNO) {
+		super("Account/Customer "+idoraccNO +" Not Found");
+	}
+}
+package exceptions;
+
+public class DailyLimitExceededException extends Exception{
+	
+	public DailyLimitExceededException()
+	{
+		super("Daily Transation Linit is ₹50,000 exceeded");
+	}
+
+}
+package exceptions;
+
+public class DuplicateAccountException extends Exception{
+	
+	public DuplicateAccountException(int accNo)
+	{
+		super("Account No "+accNo +"  Already Exist.");
+	}
+
+}
+package exceptions;
+
+public class InsufficientFundsException extends Exception{
+	
+	private double attemptedAmount;
+	private double availableBalance;
+	
+	public InsufficientFundsException(double attempted, double balance)
+	{
+		
+		super("Insufficient funds! Attempted: ₹" + 
+	              String.format("%.2f", attempted) + ", Available: ₹" + String.format("%.2f", balance));
+		
+		this.attemptedAmount = attempted;
+		this.availableBalance = balance;
+	}
+}
+package exceptions;
+
+public class InvalidAmountException extends Exception{
+
+	public InvalidAmountException(double amount) {
+		super("Invalid Amount :"+ amount + ". Must be > 0");
+	}
+}
+package exceptions;
+
+public class InvalidIFSCException extends Exception
+{
+	public InvalidIFSCException(String ifsc)
+	{
+		super("Invalid IFSC :"+ifsc +". Format : [A-Z]{4}0[A-Z]{6}");
+	}
+}
+package exceptions;
+
+public class MinimumBalanceException extends Exception {
+	
+	public MinimumBalanceException(double accbalance)
+	{
+		super("Minimum Balance > 1000  required.Current Balance : ₹ "+String.format("%.2f",accbalance));
+	}
+}
+package model.entity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import exceptions.InsufficientFundsException;
+import exceptions.InvalidAmountException;
+import model.enums.AccountType;
+import model.enums.TransactionType;
+
+
+
+public abstract class Account implements BankAccount {
+    
+    // 1. Fields (private, final first)
+    private final int accNo;
+    private final String ifscCode;
+    private double balance;
+    private final AccountType accType;
+    private final List<Transaction> transactions = new ArrayList<>();
+    
+    // 2. Constructor
+    public Account(int accNo, String ifscCode, double balance, AccountType accType) {
+        this.accNo = accNo;
+        this.ifscCode = ifscCode;
+        this.balance = Math.max(0, balance); // Prevent negative initial balance
+        this.accType = accType;
+    }
+    
+    // 3. Interface Methods (BankAccount)
+    @Override
+    public int getAccNo() {
+        return accNo;
+    }
+    
+    @Override
+    public double getBalance() {
+        return balance;
+    }
+    
+    @Override
+    public void deposit(double amount) throws InvalidAmountException {
+        if (amount <= 0) throw new InvalidAmountException(amount);
+        
+        balance += amount;
+        transactions.add(new Transaction(TransactionType.DEPOSIT, amount, balance, 
+            "Deposit to A/c " + accNo));
+        System.out.println("✅ Deposited ₹" + String.format("%.2f", amount));
+    }
+    
+    @Override
+    public void withdraw(double amount) throws InvalidAmountException, InsufficientFundsException {
+        if (amount <= 0) throw new InvalidAmountException(amount);
+        if (balance < amount) throw new InsufficientFundsException(amount, balance);
+        
+        balance -= amount;
+        transactions.add(new Transaction(TransactionType.WITHDRAWAL, amount, balance,
+            "Withdrawal from A/c " + accNo));
+        System.out.println("✅ Withdrew ₹" + String.format("%.2f", amount));
+    }
+    
+    // 4. Getters/Setters (Business fields)
+    public String getIfscCode() {
+        return ifscCode;
+    }
+    
+    public AccountType getAccType() {
+        return accType;
+    }
+    
+    // 5. Transaction Management
+    public List<Transaction> getTransactions() {
+        return new ArrayList<>(transactions); // Defensive copy
+    }
+    
+    public void printStatement(int count) {
+        System.out.println("\n=== LAST " + count + " TRANSACTIONS ===");
+        System.out.println("Date      | Type      | Amount   | Balance  | Desc");
+        System.out.println("------------------------------------------------");
+        
+        if (transactions.isEmpty()) {
+            System.out.println("No transactions yet.");
+            return;
+        }
+        
+        int start = Math.max(0, transactions.size() - count);
+        for (int i = start; i < transactions.size(); i++) {
+            System.out.println(transactions.get(i));
+        }
+    }
+    
+    // 6. Interest Management (Abstract method + utility)
+    public abstract double calculateInterest();
+    
+    public final void addInterestToBalance() {
+        double interest = calculateInterest();
+        if (interest > 0) {
+            balance += interest;
+            transactions.add(new Transaction(TransactionType.DEPOSIT, interest, balance,
+                "Interest credited to A/c " + accNo));
+            System.out.println("✅ Interest added: ₹" + String.format("%.2f", interest));
+        }
+    }
+    
+    // 7. toString() - Last
+    @Override
+    public String toString() {
+        return String.format("AccNo=%d, IFSC=%s, Bal=₹%.2f, Type=%s", 
+            accNo, ifscCode, balance, accType);
+    }
+}
+package model.entity;
+
+public class Address {
+    
+    // 1. Fields (private, final where appropriate)
+    private final String city;
+    private final String state;
+    private final int pinCode;
+    
+    // 2. Constructor
+    public Address(String city, String state, int pinCode) {
+        this.city = city != null ? city.trim() : "Unknown";
+        this.state = state != null ? state.trim() : "Unknown";
+        this.pinCode = Math.max(100000, Math.min(999999, pinCode)); // Valid PIN range
+    }
+    
+    // 3. Getters (immutable - no setters needed)
+    public String getCity() {
+        return city;
+    }
+    
+    public String getState() {
+        return state;
+    }
+    
+    public int getPinCode() {
+        return pinCode;
+    }
+    
+    // 4. toString() - Professional format
+    @Override
+    public String toString() {
+        return String.format("%s, %s - %06d", city, state, pinCode);
+    }
+    
+    // 5. equals() + hashCode() for comparisons
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Address)) return false;
+        
+        Address other = (Address) obj;
+        return pinCode == other.pinCode && 
+               city.equals(other.city) && 
+               state.equals(other.state);
+    }
+    
+    @Override
+    public int hashCode() {
+        int result = city.hashCode();
+        result = 31 * result + state.hashCode();
+        result = 31 * result + pinCode;
+        return result;
+    }
+}
+package model.entity;
+
+import exceptions.InsufficientFundsException;
+import exceptions.InvalidAmountException;
+
+public interface BankAccount {
+    public int getAccNo();
+    double getBalance();
+    void deposit(double amount) throws InvalidAmountException;
+    void withdraw(double amount) throws InvalidAmountException, InsufficientFundsException;
+}
+package model.entity;
+
+import model.enums.AccountType;
+
+public class CurrentAccount extends Account {
+    
+    // 1. Fields (private, final where appropriate)
+    private final String compName;
+    
+    // 2. Constructor
+    public CurrentAccount(int accNo, String ifscCode, double balance, AccountType accType, String compName) {
+        super(accNo, ifscCode, balance, accType);
+        this.compName = compName != null ? compName.trim() : "Unknown Company";
+    }
+    
+    // 3. Business Getters
+    public String getCompName() {
+        return compName;
+    }
+    
+    // 4. Interest Calculation (Current accounts = 0% interest)
+    @Override
+    public double calculateInterest() {
+        return 0.0; // Current accounts don't earn interest
+    }
+    
+    // 5. toString() - Professional format
+    @Override
+    public String toString() {
+        return super.toString() + ", Company=" + compName;
+    }
+}
+package model.entity;
+
+public class Customer {
+    
+    // 1. Fields (private, final everywhere)
+    private final int custId;
+    private String custName;
+    private final BankAccount custAcc;
+    private Address custAddr;
+    
+    // 2. Constructor with validation
+    public Customer(int custId, String custName, BankAccount custAcc, Address custAddr) {
+        if (custId <= 0) throw new IllegalArgumentException("Customer ID must be positive");
+        if (custName == null || custName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Customer name cannot be empty");
+        }
+        if (custAcc == null) throw new IllegalArgumentException("Account required");
+        if (custAddr == null) throw new IllegalArgumentException("Address required");
+        
+        this.custId = custId;
+        this.custName = custName.trim();
+        this.custAcc = custAcc;
+        this.custAddr = custAddr;
+    }
+    
+    // 3. Getters 
+    public int getCustId() {
+        return custId;
+    }
+    
+    public String getCustName() {
+        return custName;
+    }
+    
+    public BankAccount getCustAcc() {
+        return custAcc;
+    }
+    
+    public Address getCustAddr() {
+        return custAddr;
+    }
+    
+    //4.setters
+    public void setCustName(String custName) {
+        if (custName == null || custName.trim().isEmpty() || custName.length() < 2 || custName.length() > 50) {
+            throw new IllegalArgumentException("Valid name (2-50 chars) required");
+        }
+        this.custName = custName.trim();
+        System.out.println("✅ Name updated to: " + this.custName);
+    }
+    
+    public void setCustAddr(Address custAddr) {
+        if (custAddr == null) throw new IllegalArgumentException("Address required");
+        this.custAddr = custAddr;
+        System.out.println("✅ Address updated");
+    }
+    
+    // 5. Professional toString()
+    @Override
+    public String toString() {
+        return String.format("ID:%-4d %-15s | %-35s | %s", 
+            custId, custName, custAcc, custAddr);
+    }
+    
+    // 6. equals() + hashCode() for uniqueness
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Customer)) return false;
+        
+        Customer other = (Customer) obj;
+        return custId == other.custId;
+    }
+    
+    @Override
+    public int hashCode() {
+        return custId;
+    }
+}
+package model.entity;
+
+import model.enums.AccountType;
+
+public class SavingsAccount extends Account {
+    
+    // 1. Fields (private, final)
+    private final double interestRate;
+    
+    // 2. Constructor with validation
+    public SavingsAccount(int accNo, String ifscCode, double balance, AccountType accType, double interestRate) {
+        super(accNo, ifscCode, balance, accType);
+        if (interestRate < 0 || interestRate > 20) {
+            throw new IllegalArgumentException("Interest rate must be 0-20%: " + interestRate);
+        }
+        this.interestRate = interestRate;
+    }
+    
+    // 3. Business Getters
+    public double getInterestRate() {
+        return interestRate;
+    }
+    
+    // 4. Interest Calculation (Monthly simple interest)
+    @Override
+    public double calculateInterest() {
+        return getBalance() * (interestRate / 100) * (1.0 / 12); // Monthly interest
+    }
+    
+    // 5. Professional toString()
+    @Override
+    public String toString() {
+        return super.toString() + ", Rate=" + String.format("%.2f%%", interestRate);
+    }
+}
+package model.entity;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import model.enums.TransactionType;
+
+public class Transaction {
+    
+    // 1. Fields (private, final everywhere)
+    private final int transactionId;
+    private static int nextId = 1;
+    private final LocalDateTime timestamp;
+    private final TransactionType type;
+    private final double amount;
+    private final double balanceAfter;
+    private final String description;
+    
+    // 2. Constructor with validation
+    public Transaction(TransactionType type, double amount, double balanceAfter, String description) {
+        if (type == null) throw new IllegalArgumentException("Transaction type required");
+        if (amount <= 0) throw new IllegalArgumentException("Amount must be positive: " + amount);
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description required");
+        }
+        
+        this.transactionId = Transaction.nextId++;
+        this.timestamp = LocalDateTime.now();
+        this.type = type;
+        this.amount = amount;
+        this.balanceAfter = balanceAfter;
+        this.description = description.trim();
+    }
+    
+    // 3. Business Getters
+    public int getTransactionId() {
+        return transactionId;
+    }
+    
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+    
+    public TransactionType getType() {
+        return type;
+    }
+    
+    public double getAmount() {
+        return amount;
+    }
+    
+    public double getBalanceAfter() {
+        return balanceAfter;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    // 4. Professional toString() - Table formatted
+    @Override
+    public String toString() {
+        return String.format("[%s] ID:%-3d %8s ₹%10.2f | Bal:₹%10.2f | %s",
+            timestamp.format(DateTimeFormatter.ofPattern("dd-MM HH:mm")),
+            transactionId, type, amount, balanceAfter, description);
+    }
+}
+package model.enums;
+
+public enum AccountType {
+    SAVINGS("Savings Account", true),
+    CURRENT("Current Account", false);
+    
+    private final String displayName;
+    private final boolean earnsInterest;
+    
+    AccountType(String displayName, boolean earnsInterest) {
+        this.displayName = displayName;
+        this.earnsInterest = earnsInterest;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+    
+    public boolean earnsInterest() {
+        return earnsInterest;
+    }
+    
+    @Override
+    public String toString() {
+        return displayName;
+    }
+}
+package model.enums;
+
+public enum TransactionType {
+    DEPOSIT("Deposit", true),
+    WITHDRAWAL("Withdrawal", true),
+    TRANSFER_IN("Transfer In", true),
+    TRANSFER_OUT("Transfer Out", true);
+    
+    private final String displayName;
+    private final boolean affectsBalance;
+    
+    TransactionType(String displayName, boolean affectsBalance) {
+        this.displayName = displayName;
+        this.affectsBalance = affectsBalance;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+    
+    public boolean affectsBalance() {
+        return affectsBalance;
+    }
+    
+    @Override
+    public String toString() {
+        return displayName;
+    }
+}
+
+package service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import exceptions.AccountNotFoundException;
+import exceptions.InsufficientFundsException;
+import exceptions.InvalidAmountException;
+import model.entity.Account;
+import model.entity.Address;
+import model.entity.BankAccount;
+import model.entity.CurrentAccount;
+import model.entity.Customer;
+import model.entity.SavingsAccount;
+import model.enums.AccountType;
+
+public class BankServices {
+
+	// 1. Fields
+	private final Scanner sc;
+	private final List<Customer> custlist;
+
+	// 2. Constructor
+	public BankServices() {
+		this.sc = new Scanner(System.in);
+		this.custlist = new ArrayList<>();
+	}
+
+	// 3. Core Banking Operations (Public)
+	public void addAccount() {
+		try {
+			int custId = getIntInput("Enter Customer ID: ");
+			String custName = getStringInput("Enter Customer Name: ");
+
+			int accNo = getIntInput("Enter Account Number: ");
+			String ifscCode = getStringInput("Enter IFSC Code: ");
+			double balance = getDoubleInput("Enter Initial Balance: ₹");
+			String accType = getStringInput("Account Type (Savings/Current): ");
+
+			BankAccount account = createAccount(accNo, ifscCode, balance, accType);
+			Address address = getAddressInput();
+
+			Customer customer = new Customer(custId, custName, account, address);
+			custlist.add(customer);
+			System.out.println("✅ Account created for " + custName);
+
+		} catch (Exception e) {
+			System.out.println("❌ Error creating account: " + e.getMessage());
+		}
+	}
+
+	public void displayAllAccounts() {
+		if (custlist.isEmpty()) {
+			System.out.println("No accounts found!");
+			return;
+		}
+
+		System.out.println("\n=== ALL ACCOUNTS ===");
+		System.out.println("ID | Name | Account Details | City");
+		System.out.println("-------------------------------------------------");
+
+		for (Customer cust : custlist) {
+			System.out.printf("%-2d | %-12s | %-35s | %s%n", 
+					cust.getCustId(), cust.getCustName(), 
+					cust.getCustAcc(), cust.getCustAddr().getCity());
+		}
+	}
+
+	public void transaction() {
+		if (custlist.isEmpty()) {
+			System.out.println("No Customers!");
+			return;
+		}
+
+		String str;
+		do {
+			try {
+				int id = getIntInput("Enter Customer ID: ");
+				Customer cust = findCustomerById(id);
+
+				System.out.println("\nAccount: " + cust.getCustAcc());
+				System.out.println("1:Deposit  2:Withdraw");
+				int choice = getIntInput("Choose (1-2): ");
+
+				switch (choice) {
+				case 1 -> performDeposit(cust);
+				case 2 -> performWithdraw(cust);
+				default -> System.out.println("Invalid choice!");
+				}
+			} catch (AccountNotFoundException e) {
+				System.out.println("❌ " + e.getMessage());
+			}
+
+			str = getStringInput("Continue? (yes/no): ");
+		} while (str.equalsIgnoreCase("yes"));
+	}
+
+	public void viewStatement() {
+		if (custlist.isEmpty()) {
+			System.out.println("No accounts!");
+			return;
+		}
+
+		try {
+			int custId = getIntInput("Enter Customer ID: ");
+			Customer cust = findCustomerById(custId);
+			Account acc = (Account) cust.getCustAcc();
+
+			String countStr = getStringInput("Last how many? (10/all): ");
+			int count = countStr.equalsIgnoreCase("all") ? 50 : Integer.parseInt(countStr);
+			acc.printStatement(count);
+		} catch (AccountNotFoundException e) {
+			System.out.println("❌ " + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("❌ Invalid input!");
+		}
+	}
+
+	public void updateAccount() {
+		if (custlist.isEmpty()) {
+			System.out.println("No accounts!");
+			return;
+		}
+		//System.out.println("⚠️ Update feature disabled - immutable design");
+
+		try {
+			int custId = getIntInput("Enter Customer ID: ");
+			Customer cust = findCustomerById(custId);
+			displayCustomerDetails(cust);
+
+			System.out.println("🔧 UPDATE OPTIONS:");
+			System.out.println("1. Name only");
+			System.out.println("2. Address only"); 
+			System.out.println("3. Both Name + Address");
+			int choice = getIntInput("Choose (1-3): ");
+
+			switch (choice) {
+			case 1 -> updateNameOnly(cust);
+			case 2 -> updateAddressOnly(cust);
+			case 3 -> updateBoth(cust);
+			default -> {
+				System.out.println("❌ Invalid choice!");
+				return;
+			}
+			}
+
+			System.out.println("\n✅ UPDATE SUCCESSFUL!");
+			displayCustomerDetails(cust);
+
+		} catch (AccountNotFoundException e) {
+			System.out.println("❌ " + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("❌ Update failed: " + e.getMessage());
+		}
+	}
+
+	public void deleteAccount() {
+		if (custlist.isEmpty()) {
+			System.out.println("No accounts!");
+			return;
+		}
+		//System.out.println("⚠️ Delete feature disabled - production safety");
+		try {
+			// 1. Find & Display Account
+			int custId = getIntInput("Enter Customer ID to DELETE: ");
+			Customer cust = findCustomerById(custId);
+			displayCustomerDetails(cust);
+
+			// 2. Balance Check (SAFETY)
+			double balance = cust.getCustAcc().getBalance();
+			if (balance > 0) {
+				System.out.println("⚠️  Cannot delete - Balance ₹" + balance + " remaining!");
+				System.out.println("💡 Use Transaction → Withdraw first");
+				return;
+			}
+
+			// 3. Double Confirmation
+			System.out.print("⚠️  PERMANENT DELETE? Type 'DELETE [ID:" + custId + "]' exactly: ");
+			sc.nextLine(); // Clear buffer
+			String confirm = sc.nextLine().trim();
+
+			if (!confirm.equals("DELETE " + custId)) {
+				System.out.println("✅ Delete cancelled - Account safe!");
+				return;
+			}
+
+			// 4. Final Safety Check
+			System.out.println("\n🔍 Final verification...");
+			Thread.sleep(1000); // Dramatic pause
+
+			// 5. DELETE
+			custlist.remove(cust);
+			System.out.println("\n🗑️  Account PERMANENTLY DELETED!");
+			System.out.println("💾 " + cust.getCustName() + " removed from system");
+
+		} catch (AccountNotFoundException e) {
+			System.out.println("❌ " + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("❌ Delete failed: " + e.getMessage());
+		}
+	}
+
+	public void addInterestToAllAccounts() {
+		if (custlist.isEmpty()) {
+			System.out.println("No accounts!");
+			return;
+		}
+
+		System.out.println("\n=== ADDING INTEREST TO ALL ACCOUNTS ===");
+		for (Customer cust : custlist) {
+			try {
+				Account acc = (Account) cust.getCustAcc();
+				acc.addInterestToBalance();
+			} catch (Exception e) {
+				System.out.println("Error adding interest: " + e.getMessage());
+			}
+		}
+	}
+
+	// 4. Search Operations
+	public void searchAccount() {
+		if (custlist.isEmpty()) {
+			System.out.println("No accounts found!");
+			return;
+		}
+
+		String continueSearch;
+		do {
+			System.out.println("\n🔍 SEARCH BY:");
+			System.out.println("1. Customer ID  2. Account Number  3. Name");
+			int choice = getIntInput("Choose (1-3): ");
+
+			switch (choice) {
+			case 1 -> searchByCustomerId();
+			case 2 -> searchByAccountNo();
+			case 3 -> searchByName();
+			default -> System.out.println("Invalid choice!");
+			}
+
+			continueSearch = getStringInput("Continue search? (yes/no): ");
+		} while (continueSearch.equalsIgnoreCase("yes"));
+	}
+
+	// 5. Private Helper Methods
+	private Customer findCustomerById(int id) throws AccountNotFoundException {
+		for (Customer c : custlist) {
+			if (c.getCustId() == id) return c;
+		}
+		throw new AccountNotFoundException(id);
+	}
+
+	private BankAccount createAccount(int accNo, String ifscCode, double balance, String accType) {
+		if (accType.equalsIgnoreCase("savings")) {
+			double rate = getDoubleInput("Enter Interest Rate (%): ");
+			return new SavingsAccount(accNo, ifscCode, balance, AccountType.SAVINGS, rate);
+		} else {
+			String company = getStringInput("Enter Company Name: ");
+			return new CurrentAccount(accNo, ifscCode, balance, AccountType.CURRENT, company);
+		}
+	}
+
+	private Address getAddressInput() {
+		String city = getStringInput("Enter City: ");
+		String state = getStringInput("Enter State: ");
+		int pincode = getIntInput("Enter Pincode: ");
+		return new Address(city, state, pincode);
+	}
+
+	private void performDeposit(Customer cust) {
+		try {
+			double amount = getDoubleInput("Enter deposit amount: ₹");
+			cust.getCustAcc().deposit(amount);
+			System.out.println("✅ Deposit successful");
+		} catch (InvalidAmountException e) {
+			System.out.println("❌ " + e.getMessage());
+		}
+	}
+
+	private void performWithdraw(Customer cust) {
+		try {
+			double amount = getDoubleInput("Enter withdrawal amount: ₹");
+			cust.getCustAcc().withdraw(amount);
+			System.out.println("✅ Withdrawal successful");
+		} catch (InvalidAmountException | InsufficientFundsException e) {
+			System.out.println("❌ " + e.getMessage());
+		}
+	}
+
+	private void searchByCustomerId() {
+		try {
+			int custId = getIntInput("Enter Customer ID: ");
+			Customer cust = findCustomerById(custId);
+			displayCustomerDetails(cust);
+		} catch (AccountNotFoundException e) {
+			System.out.println("❌ " + e.getMessage());
+		}
+	}
+
+	private void searchByAccountNo() {
+		int accNo = getIntInput("Enter Account Number: ");
+		boolean found = false;
+
+		for (Customer cust : custlist) {
+			if (cust.getCustAcc().getAccNo() == accNo) {
+				displayCustomerDetails(cust);
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			System.out.println("❌ Account Number not found!");
+		}
+	}
+
+	private void searchByName() {
+		sc.nextLine(); // Clear buffer
+		String name = getStringInput("Enter name (partial OK): ").toLowerCase().trim();
+
+		boolean foundAny = false;
+		for (Customer cust : custlist) {
+			if (cust.getCustName().toLowerCase().contains(name)) {
+				displayCustomerDetails(cust);
+				foundAny = true;
+			}
+		}
+		if (!foundAny) {
+			System.out.println("❌ No customers found with name: '" + name + "'");
+		}
+	}
+
+	private void displayCustomerDetails(Customer cust) {
+		System.out.println("\n✅ ═══════════════════════════════════════════════");
+		System.out.println("         CUSTOMER DETAILS FOUND");
+		System.out.println("   ═══════════════════════════════════════════════");
+		System.out.printf("   ID     : %d%n", cust.getCustId());
+		System.out.printf("   Name   : %s%n", cust.getCustName());
+		System.out.printf("   Account: %s%n", cust.getCustAcc());
+		System.out.printf("   Address: %s%n", cust.getCustAddr());
+		System.out.println("   ═══════════════════════════════════════════════");
+	}
+
+
+	private void updateNameOnly(Customer cust) {
+		String newName = getStringInput("Enter new name: ");
+		if (newName.length() < 2 || newName.length() > 50) {
+			throw new IllegalArgumentException("Name must be 2-50 characters");
+		}
+		cust.setCustName(newName);
+	}
+
+	private void updateAddressOnly(Customer cust) {
+		Address newAddress = getAddressInput();
+		cust.setCustAddr(newAddress);
+	}
+
+	private void updateBoth(Customer cust) {
+		updateNameOnly(cust);
+		updateAddressOnly(cust);
+	}
+
+	// 6. Input Helper Methods
+	private int getIntInput(String prompt) {
+		System.out.print(prompt);
+		return sc.nextInt();
+	}
+
+	private double getDoubleInput(String prompt) {
+		System.out.print(prompt);
+		return sc.nextDouble();
+	}
+
+	private String getStringInput(String prompt) {
+		System.out.print(prompt);
+		sc.nextLine(); // Clear buffer
+		return sc.nextLine().trim();
+	}
+}
+
+
+
+
