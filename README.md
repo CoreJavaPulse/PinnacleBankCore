@@ -2,7 +2,6 @@
 
 [![Core Java](https://img.shields.io/badge/Core%20Java-17%2B-brightgreen?style=flat-square\&logo=java\&logoColor=white)](https://www.oracle.com/java/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Made in India](https://img.shields.io/badge/Made%20in-India-tricolor?style=flat-square)](https://github.com/)
 
 ### 🚀 Production-Ready **Core Java Console Banking System** (OOP-Driven Design)
 
