@@ -138,23 +138,29 @@ public class InputHandler {
 		String cont;
 		do {
 			try {
-				int id = getInt("Enter Customer ID: ", 1, 999999);
-				Customer cust = bank.findById(id);
-				System.out.println("\nAccount: " + cust.getCustAcc());
-
-				System.out.println("1:Deposit  2:Withdraw");
-				int choice = getInt("Choose (1-2): ", 1, 2);
+				System.out.println("\n 💳 TRANSACTION OPTIONS:");
+				System.out.println("1:Deposit 2:Withdraw 3:Transfer");
+				int choice = getInt("Choose (1-3): ",1,3); 
 
 				switch (choice) {
 				case 1 -> {
+					int id = getInt("Enter Customer ID: ", 1, 999999);
+					Customer cust = bank.findById(id);
+					System.out.println("\nAccount: " + cust.getCustAcc());
 					double amount = getDouble("Deposit amount (₹): ", 0.01);
 					bank.deposit(id, amount);
 					System.out.println("✅ Deposit successful");
 				}
 				case 2 -> {
+					int id = getInt("Enter Customer ID: ", 1, 999999);
+					Customer cust = bank.findById(id);
+					System.out.println("\nAccount: " + cust.getCustAcc());
 					double amount = getDouble("Withdraw amount (₹): ", 0.01);
 					bank.withdraw(id, amount);
 					System.out.println("✅ Withdrawal successful");
+				}
+				case 3 ->{
+						transferBetweenAccount(bank);
 				}
 				}
 			} catch (Exception e) {
@@ -162,6 +168,22 @@ public class InputHandler {
 			}
 			cont = getString("Continue transaction? (yes/no): ");
 		} while ("yes".equalsIgnoreCase(cont));
+	}
+
+	private void transferBetweenAccount(BankServices bank) {
+		try {
+			int fromId = getInt("From Customer Id: ",1,999999);
+			int toId = getInt("To Customer Id: ",1,999999);
+			double amount = getDouble("Transfer amount (₹): ", 0.01);
+			Customer from = bank.findById(fromId);
+			Customer to = bank.findById(toId);
+			System.out.println("From Balance: ₹" + String.format("%.2f", from.getCustAcc().getBalance()));
+			System.out.println("To Balance: ₹" + String.format("%.2f", to.getCustAcc().getBalance()));
+			bank.transfer(fromId, toId, amount);
+		}
+		catch(Exception e) {
+		System.out.println("❌ Transfer failed: " + e.getMessage());
+		}
 	}
 
 	public void update(BankServices bank) {

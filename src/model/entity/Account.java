@@ -45,10 +45,11 @@ public abstract class Account implements BankAccount {
         if (amount <= 0) throw new InvalidAmountException(amount);
         
         balance += amount;
-        transactions.add(new Transaction(TransactionType.DEPOSIT, amount, balance, 
+        TransactionType type = TransactionType.TRANSFER_IN;
+        
+        transactions.add(new Transaction(type, amount, balance, 
             "Deposit to A/c " + accNo));
-        System.out.println("✅ Deposited ₹" + String.format("%.2f", amount));
-    }
+        System.out.println("✅ Deposited ₹" + String.format("%.2f", amount));}
     
     @Override
     public void withdraw(double amount) throws InvalidAmountException, InsufficientFundsException {
@@ -56,8 +57,8 @@ public abstract class Account implements BankAccount {
         if (balance < amount) throw new InsufficientFundsException(amount, balance);
         
         balance -= amount;
-        transactions.add(new Transaction(TransactionType.WITHDRAWAL, amount, balance,
-            "Withdrawal from A/c " + accNo));
+        transactions.add(new Transaction(TransactionType.TRANSFER_OUT, amount, balance,
+            "Transfer out from A/c " + accNo));
         System.out.println("✅ Withdrew ₹" + String.format("%.2f", amount));
     }
     

@@ -50,6 +50,22 @@ public class BankServices {
         cust.getCustAcc().withdraw(amount);
     }
 
+    public void transfer(int fromCustId,int toCustId,double amount) throws Exception
+    {
+    	if(fromCustId == toCustId) throw new IllegalArgumentException("Cannot Tranfer to Same Account");
+    	
+    	Customer fromCust = findById(fromCustId);
+    	Customer toCust = findById(toCustId);
+    	BankAccount fromAcc = fromCust.getCustAcc();
+    	BankAccount toAcc = toCust.getCustAcc();
+    	
+        System.out.println("\n💰 TRANSFERRING ₹" + String.format("%.2f", amount));
+        System.out.println("From: " + fromCust.getCustName() + " (Acc: " + fromAcc.getAccNo() + ")");
+        System.out.println("To:   " + toCust.getCustName() + " (Acc: " + toAcc.getAccNo() + ")");
+        fromAcc.withdraw(amount);
+        toAcc.deposit(amount);
+        System.out.println("✅ Transfer successful!");
+    }
     public void addInterestToAllAccounts() {
         if (custlist.isEmpty()) return;
         System.out.println("\n=== ADDING INTEREST ===");
