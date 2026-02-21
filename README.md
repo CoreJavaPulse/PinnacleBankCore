@@ -1,176 +1,183 @@
-# 🏦 PinnacleBankCore  
-### A Core Java Console Banking System (OOP-Driven Design)
+# 🏦 PinnacleBankCore
 
-PinnacleBankCore is a fully menu-driven **console banking application** developed using **Core Java**, designed to demonstrate strong **Object-Oriented Programming (OOP)** principles, **custom exception handling**, and **clean layered architecture**.
+[![Core Java](https://img.shields.io/badge/Core%20Java-17%2B-brightgreen?style=flat-square\&logo=java\&logoColor=white)](https://www.oracle.com/java/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-This project intentionally avoids frameworks and databases to showcase **core Java fundamentals**, making it ideal for **Java freshers, interview preparation, and OOP practice**.
+### 🚀 Production-Ready **Core Java Console Banking System** (OOP-Driven Design)
+
+**PinnacleBankCore** is a fully menu-driven **console banking application** developed using **pure Core Java**, demonstrating **enterprise-level OOP principles**, **custom exception handling**, and **clean layered architecture**.
+
+> ⚡ **No frameworks. No databases. Pure Core Java fundamentals** — Perfect for **Java interviews**, **OOP mastery**, and **fresher portfolios**.
 
 ---
 
 ## 🎯 Project Objective
 
-- Apply Core Java concepts in a real-world banking domain  
-- Practice abstraction, inheritance, polymorphism, and encapsulation  
-- Implement custom checked exceptions for business rules  
-- Design a clean, scalable console-based application  
+Build a **scalable banking system** showcasing:
+
+* ✅ SOLID principles in action
+* ✅ 7+ custom business exceptions
+* ✅ Real-world banking logic (interest, min balance, daily limits)
+* ✅ Professional console UI with formatted tables
 
 ---
 
-## 🧠 High-Level Flow
-```
-User
- ↓
-BankMain (Menu Controller)
- ↓
-BankServices (Business Layer)
- ↓
-Customer → Account → Transactions
- ↓
-Enums + Exceptions enforce rules
+## 📱 Live Demo
 
+```text
+--------------------- Main Menu ---------------------
+1:Add Account 2:Display All 3:Search Account
+4:Transaction 5:Update 6:Delete Account
+7:Add Interest 8:Account Statement
+
+Choose (1-8): 1
+Customer ID: 101
+Customer Name: Hitesh Mane
+Account No: 123456
+IFSC Code: SBIN0001234
+Initial Balance (₹): 5000
+Type (SAVINGS/CURRENT): SAVINGS
+Interest Rate (%): 6.5
+
+✅ Account created: Hitesh Mane
 ```
+
 ---
 
-## 🗂️ Project Structure
+## 🧠 Core Java Concepts Mastered
+
+| Concept                | Implementation                               | Business Value     |
+| ---------------------- | -------------------------------------------- | ------------------ |
+| **Inheritance**        | `Account → SavingsAccount/CurrentAccount`    | Account hierarchy  |
+| **Polymorphism**       | `addInterestToAllAccounts()`                 | Uniform processing |
+| **Abstraction**        | `BankAccount` interface + `Account` abstract | Clean contracts    |
+| **Encapsulation**      | Private fields + validation                  | Data integrity     |
+| **Collections**        | `ArrayList<Customer>`, `List<Transaction>`   | Efficient storage  |
+| **Exception Handling** | 7+ custom checked exceptions                 | Rule enforcement   |
+| **Enums**              | `AccountType`, `TransactionType`             | Type safety        |
+| **Streams/Lambdas**    | Duplicate checks, searches                   | Modern Java        |
+
+---
+
+## ⚙️ Production Features
+
+| Feature          | Savings Account       | Current Account       | Status      |
+| ---------------- | --------------------- | --------------------- | ----------- |
+| Create Account   | ✅ ₹1000 min balance   | ✅ Business accounts   | 🟢 Complete |
+| Deposit/Withdraw | ✅ Transaction history | ✅ Transaction history | 🟢 Complete |
+| Interest         | ✅ 6.5% monthly        | ❌ Zero interest       | 🟢 Complete |
+| Search           | ID/AccNo/Name         | ID/AccNo/Name         | 🟢 Complete |
+| Statement        | Last N transactions   | Last N transactions   | 🟢 Complete |
+| Update           | Name + Address        | Name + Address        | 🟢 Complete |
+| Delete           | Balance=0 required    | Balance=0 required    | 🟢 Complete |
+
+---
+
+## 🗂️ Enterprise Architecture
+
+```text
+┌─────────────────┐      ┌──────────────────┐      ┌─────────────────┐
+│    BankMain     │ ───▶ │   BankServices   │ ───▶ │     Customer    │
+│   (Controller)  │      │ (Business Logic) │      │        ↕        │
+└─────────────────┘      └──────────────────┘      │     Account     │
+                                                   │        ↕        │
+                                                   │   Transactions  │
+                                                   │     Address     │
+                                                   └─────────────────┘
 ```
-PinnacleBankCore
-│
+
+---
+
+## 📁 Project Structure
+
+```text
+PinnacleBankCore/
 ├── BankMain.java
-│   └── Entry point
-│   └── Displays menu & routes user actions
-│
-├── service
+├── service/
 │   └── BankServices.java
-│       ├── Account creation
-│       ├── Transactions
-│       ├── Search operations
-│       ├── Update & delete logic
-│       └── Interest calculation
-│
-├── model
-│   ├── entity
-│   │   ├── BankAccount.java      → Interface
-│   │   ├── Account.java          → Abstract base class
-│   │   ├── SavingsAccount.java   → Interest-earning account
-│   │   ├── CurrentAccount.java   → Business account
-│   │   ├── Customer.java         → Customer profile
-│   │   ├── Address.java          → Immutable value object
-│   │   └── Transaction.java      → Transaction record
-│   │
-│   └── enums
+├── model/
+│   ├── entity/
+│   │   ├── BankAccount.java
+│   │   ├── Account.java
+│   │   ├── SavingsAccount.java
+│   │   ├── CurrentAccount.java
+│   │   ├── Customer.java
+│   │   ├── Transaction.java
+│   │   └── Address.java
+│   └── enums/
 │       ├── AccountType.java
 │       └── TransactionType.java
-│
-├── exceptions
+├── exceptions/
 │   ├── AccountNotFoundException.java
 │   ├── DuplicateAccountException.java
-│   ├── InvalidAmountException.java
 │   ├── InsufficientFundsException.java
+│   ├── InvalidAmountException.java
 │   ├── MinimumBalanceException.java
 │   ├── DailyLimitExceededException.java
 │   └── InvalidIFSCException.java
+└── util/
+    └── BankConstants.java
 ```
----
-
-## ⚙️ Features
-
-### 🧾 Account Management
-- Savings and Current account creation  
-- Customer profile with address  
-- In-memory storage using `ArrayList`
-
-### 💸 Transactions
-- Deposit and withdrawal operations  
-- Validation for invalid amounts  
-- Protection against insufficient balance  
-- Automatic transaction history tracking  
-
-### 📄 Account Statement
-- View last **N transactions**
-- View complete transaction history  
-- Timestamped transaction records  
-
-### 🔍 Search
-- Search by Customer ID  
-- Search by Account Number  
-- Search by partial Customer Name  
-
-### ✏️ Update Operations
-- Update customer name  
-- Update customer address  
-- Safe immutable account design  
-
-### 🗑️ Delete Account (Protected)
-- Balance must be zero  
-- Double confirmation required  
-- Prevents accidental deletion  
-
-### 📈 Interest Calculation
-- Monthly interest for Savings Accounts  
-- No interest for Current Accounts  
-- Interest credited as a transaction  
 
 ---
 
-## 🧠 OOP Concepts Used
+## 🚨 Business Exceptions Enforced
 
-- Abstraction (`Account`, `BankAccount`)
-- Inheritance (`SavingsAccount`, `CurrentAccount`)
-- Polymorphism (base class references)
-- Encapsulation (private fields with validation)
-- Composition (Customer → Account → Address → Transactions)
-- Enums for domain modeling
-- Custom checked exceptions
-
----
-
-## 🚨 Custom Exceptions
-
-- AccountNotFoundException  
-- InvalidAmountException  
-- InsufficientFundsException  
-- DuplicateAccountException  
-- MinimumBalanceException  
-- DailyLimitExceededException  
-- InvalidIFSCException  
+```text
+❌ AccountNotFoundException(101)
+❌ DuplicateAccountException(123456)
+❌ InsufficientFundsException(5000.00/2000.00)
+❌ InvalidAmountException(-100.00)
+❌ MinimumBalanceException(500.00)
+❌ DailyLimitExceededException()
+❌ InvalidIFSCException(INVALID123)
+```
 
 ---
 
-## ▶️ How to Run
+## ▶️ Quick Start
 
+```bash
 1. Clone the repository  
 2. Open the project in **Eclipse / IntelliJ IDEA**  
 3. Run `BankMain.java`  
-4. Use the console menu to interact  
----
+4. Use the console menu to interact
+```
 
-## 🎓 Target Audience
+### 🔧 Prerequisites
 
-- Java Freshers  
-- Core Java learners  
-- Interview preparation  
-- OOP practice  
+* JDK 17+
+* Any Java IDE
 
 ---
 
-## 🚀 Future Enhancements
+## 🎓 Perfect For
 
-- Account-to-account transfers  
-- Database integration (JDBC)  
-- File persistence  
-- JUnit test cases  
-- Logging framework  
+* ✅ Java Fresher Interviews
+* ✅ OOP Concept Demonstration
+* ✅ Core Java Portfolio
+* ✅ Technical Round Preparation
+* ✅ College Projects
 
 ---
 
+## 🚀 Production Enhancements Planned
+
+* 📁 File Persistence (ObjectInputStream)
+* 🔁 Account Transfers
+* 🗄️ JDBC Integration (MySQL/PostgreSQL)
+* 🧪 JUnit 5 Tests (95% coverage target)
+* ⚡ Multithreading (concurrent transactions)
+
+---
 
 ## 👨‍💻 Author
-**Hitesh Mane**  
-Java Backend Developer  
-Pune, India
-📧 Email: [hiteshmane5hm@gmail.com](mailto:hiteshmane5hm@gmail.com)
-💻 GitHub: [https://github.com/CoreJavaPulse](https://github.com/CoreJavaPulse)
+
+**Hitesh Mane**
+Java Backend Developer | Pune, India
+
+📧 [hiteshmane5hm@gmail.com](mailto:hiteshmane5hm@gmail.com)
 
 ---
 
-⭐ This project focuses on **strong fundamentals, clean design, and real-world logic**, not frameworks.
+⭐ **If you like this project, don't forget to star the repo!**
