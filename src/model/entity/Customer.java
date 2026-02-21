@@ -1,5 +1,7 @@
 package model.entity;
 
+import java.util.Objects;
+
 public class Customer {
     
     // 1. Fields (private, final everywhere)
@@ -67,13 +69,17 @@ public class Customer {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof Customer)) return false;
-        
-        Customer other = (Customer) obj;
-        return custId == other.custId;
+        return custId == ((Customer) obj).custId;
     }
-    
+
     @Override
     public int hashCode() {
-        return custId;
+        return Objects.hash(custId);
     }
+    
+    public int compareTo(Customer other) {
+        return Integer.compare(this.custId, other.custId);
+    }
+
+
 }

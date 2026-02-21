@@ -108,4 +108,45 @@ public class BankServices {
 		c.getCustId() == customer.getCustId() || 
 		c.getCustAcc().getAccNo() == customer.getCustAcc().getAccNo());
 	}
+	
+	public void showDashboard() {
+	    if (custlist.isEmpty()) {
+	        System.out.println("🏦 BANK DASHBOARD - No accounts yet!");
+	        return;
+	    }
+	    
+	    double totalBalance = custlist.stream()
+	        .mapToDouble(c -> c.getCustAcc().getBalance())
+	        .sum();
+	        
+	    double avgBalance = totalBalance / custlist.size();
+	    long highBalanceAccounts = custlist.stream()
+	        .filter(c -> c.getCustAcc().getBalance() > 5000)
+	        .count();
+	    
+	    System.out.println("\n🏦 ═══════════════════════════════════════════════");
+	    System.out.println("                    BANK DASHBOARD");
+	    System.out.println("   ═══════════════════════════════════════════════");
+	    System.out.printf("   📊 Customers      : %d%n", custlist.size());
+	    System.out.printf("   💰 Total Balance  : ₹%,.2f%n", totalBalance);
+	    System.out.printf("   📈 Avg Balance    : ₹%,.2f%n", avgBalance);
+	    System.out.printf("   ⚠️  High Balance  : %d (>%s)%n", 
+	        highBalanceAccounts, "₹5000");
+	    
+	    // Top customer
+	    Customer top = custlist.stream()
+	        .max((c1, c2) -> Double.compare(
+	            c1.getCustAcc().getBalance(), 
+	            c2.getCustAcc().getBalance()))
+	        .orElse(null);
+	    if (top != null) {
+	        System.out.printf("   👑 Top Customer   : %s (₹%,.2f)%n", 
+	            top.getCustName(), top.getCustAcc().getBalance());
+	    }
+	    
+	    System.out.println("   ═══════════════════════════════════════════════");
+	    System.out.println("Press Enter to continue...");
+	    try { System.in.read(); } catch (Exception e) {}
+	}
+
 }
