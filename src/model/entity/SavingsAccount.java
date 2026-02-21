@@ -1,5 +1,7 @@
 package model.entity;
 
+import exceptions.InvalidIFSCException;
+import exceptions.MinimumBalanceException;
 import model.enums.AccountType;
 
 public class SavingsAccount extends Account {
@@ -8,7 +10,7 @@ public class SavingsAccount extends Account {
     private final double interestRate;
     
     // 2. Constructor with validation
-    public SavingsAccount(int accNo, String ifscCode, double balance, AccountType accType, double interestRate) {
+    public SavingsAccount(int accNo, String ifscCode, double balance, AccountType accType, double interestRate) throws InvalidIFSCException,MinimumBalanceException{
         super(accNo, ifscCode, balance, accType);
         if (interestRate < 0 || interestRate > 20) {
             throw new IllegalArgumentException("Interest rate must be 0-20%: " + interestRate);

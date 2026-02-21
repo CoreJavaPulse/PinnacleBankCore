@@ -242,7 +242,7 @@ public class InputHandler {
 				return;
 			}
 
-			// Simulate repo delete by marking as inactive or actual remove
+			bank.deleteCustomer(id);
 			System.out.println("🗑️ Account DELETED: " + cust.getCustName());
 		} catch (AccountNotFoundException e) {
 			System.out.println("❌ " + e.getMessage());

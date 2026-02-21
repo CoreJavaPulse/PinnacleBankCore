@@ -1,5 +1,7 @@
 package model.entity;
 
+import exceptions.InvalidIFSCException;
+import exceptions.MinimumBalanceException;
 import model.enums.AccountType;
 
 public class CurrentAccount extends Account {
@@ -8,7 +10,7 @@ public class CurrentAccount extends Account {
     private final String compName;
     
     // 2. Constructor
-    public CurrentAccount(int accNo, String ifscCode, double balance, AccountType accType, String compName) {
+    public CurrentAccount(int accNo, String ifscCode, double balance, AccountType accType, String compName) throws InvalidIFSCException,MinimumBalanceException{
         super(accNo, ifscCode, balance, accType);
         this.compName = compName != null ? compName.trim() : "Unknown Company";
     }
