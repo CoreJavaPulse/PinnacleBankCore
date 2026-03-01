@@ -32,7 +32,7 @@ public abstract class Account implements BankAccount {
 	public Account(int accNo, String ifscCode, double balance, AccountType accType)
 			throws InvalidIFSCException, MinimumBalanceException{
 
-		if (!ifscCode.toUpperCase().matches("[A-Z]{4}0[A-Z0-9]{6}")) {
+		if (!ifscCode.toUpperCase().matches("[A-Z]{4}0[A-Z]{6}")){
 		    throw new InvalidIFSCException(ifscCode);
 		}
 

@@ -3,79 +3,79 @@ import service.BankServices;
 import ui.InputHandler;
 
 public class BankMain {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        BankServices bank = new BankServices();
-        InputHandler input = new InputHandler(sc);
-        
-        String cont;
-        do {
-            showMenu();
-            int choice = input.getInt("Choose (1-8): ", 1, 8);
-            
-            try {
-                switch (choice) {
-                    case 1 -> bank.addAccount(input);
-                    case 2 -> bank.displayAllAccounts();
-                    case 3 -> input.search(bank);
-                    case 4 -> input.transaction(bank);
-                    case 5 -> input.update(bank);
-                    case 6 -> input.delete(bank);
-                    case 7 -> bank.addInterestToAllAccounts();
-                    case 8 -> input.statement(bank);
-                    default -> System.out.println("Invalid choice!");
-                }
-            } catch (Exception e) {
-                System.out.println("❌ " + e.getMessage());
-            }
-            
-            cont = input.getString("Continue? (yes/no): ");
-        } while ("yes".equalsIgnoreCase(cont));
-        
-        sc.close();
-        System.out.println("--------------------Thank You--------------------");
-    }
-    
-    private static void showMenu() {
-        System.out.println("""
-            ---------------------Main Menu--------------------
-            1:Add Account
-            2:Display All
-            3:Search Account
-            4:Transaction
-            5:Update
-            6:Delete
-            7:Interest
-            8:Statement
-            -----------------------------------------------""");
-    }
-}
-package exceptions;
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		BankServices bank = new BankServices();
+		InputHandler input = new InputHandler(sc);
 
-public class AccountNotFoundException  extends Exception{
+		String cont;
+		do {
+			showMenu();
+			int choice = input.getInt("Choose (0-8): ", 0, 8);
 
-	public AccountNotFoundException(int idoraccNO) {
-		super("Account/Customer "+idoraccNO +" Not Found");
+			try {
+				switch (choice) {
+				case 0 -> bank.showDashboard();
+				case 1 -> bank.addAccount(input);
+				case 2 -> bank.displayAllAccounts();
+				case 3 -> input.search(bank);
+				case 4 -> input.transaction(bank);
+				case 5 -> input.update(bank);
+				case 6 -> input.delete(bank);
+				case 7 -> bank.addInterestToAllAccounts();
+				case 8 -> input.statement(bank);
+				default -> System.out.println("Invalid choice!");
+				}
+			} catch (Exception e) {
+				System.out.println("❌ " + e.getMessage());
+			}
+
+			cont = input.getString("Continue? (yes/no): ");
+		} while ("yes".equalsIgnoreCase(cont));
+
+		sc.close();
+		System.out.println("--------------------Thank You--------------------");
 	}
+
+	private static void showMenu() {
+		System.out.println("""
+				---------------------Main Menu--------------------
+				0:Dashboard           1:Add Account
+				2:Display All         3:Search Account
+				4:Transaction         5:Update
+				6:Delete              7:Interest
+				8:Statement
+				-----------------------------------------------""");
+	}
+
 }
 package exceptions;
 
-public class DailyLimitExceededException extends Exception{
+public class MinimumBalanceException extends Exception {
 	
-	public DailyLimitExceededException()
+	public MinimumBalanceException(double accbalance)
 	{
-		super("Daily Transation Linit is ₹50,000 exceeded");
+		super("Minimum Balance > 1000  required.Current Balance : ₹ "+String.format("%.2f",accbalance));
 	}
-
 }
 package exceptions;
 
-public class DuplicateAccountException extends Exception{
-	
-	public DuplicateAccountException(int accNo)
+public class InvalidIFSCException extends Exception
+{
+	public InvalidIFSCException(String ifsc)
 	{
-		super("Account No "+accNo +"  Already Exist.");
+		super("Invalid IFSC :"+ifsc +". Format : [A-Z]{4}0[A-Z]{6}");
 	}
+}
+package exceptions;
+
+public class InvalidAmountException extends Exception{
+
+	public InvalidAmountException(double amount) {
+		super("Invalid Amount :"+ amount + ". Must be > 0");
+	}
+	
+	
 
 }
 package exceptions;
@@ -100,31 +100,30 @@ public class InsufficientFundsException extends Exception{
 }
 package exceptions;
 
-public class InvalidAmountException extends Exception{
-
-	public InvalidAmountException(double amount) {
-		super("Invalid Amount :"+ amount + ". Must be > 0");
+public class DuplicateAccountException extends Exception{
+	
+	public DuplicateAccountException(int accNo)
+	{
+		super("Account No "+accNo +"  Already Exist.");
 	}
-	
-	
 
 }
 package exceptions;
 
-public class InvalidIFSCException extends Exception
-{
-	public InvalidIFSCException(String ifsc)
+public class DailyLimitExceededException extends Exception{
+	
+	public DailyLimitExceededException()
 	{
-		super("Invalid IFSC :"+ifsc +". Format : [A-Z]{4}0[A-Z]{6}");
+		super("Daily Transation Linit is ₹50,000 exceeded");
 	}
+
 }
 package exceptions;
 
-public class MinimumBalanceException extends Exception {
-	
-	public MinimumBalanceException(double accbalance)
-	{
-		super("Minimum Balance > 1000  required.Current Balance : ₹ "+String.format("%.2f",accbalance));
+public class AccountNotFoundException  extends Exception{
+
+	public AccountNotFoundException(int idoraccNO) {
+		super("Account/Customer "+idoraccNO +" Not Found");
 	}
 }
 package model.entity;
@@ -161,7 +160,7 @@ public abstract class Account implements BankAccount {
 	public Account(int accNo, String ifscCode, double balance, AccountType accType)
 			throws InvalidIFSCException, MinimumBalanceException{
 
-		if (!ifscCode.toUpperCase().matches("[A-Z]{4}0[A-Z]{6}")) {
+		if (!ifscCode.toUpperCase().matches("[A-Z]{4}0[A-Z]{6}")){
 		    throw new InvalidIFSCException(ifscCode);
 		}
 
@@ -289,10 +288,11 @@ public abstract class Account implements BankAccount {
 		}
 
 		if (todayDebitTotal + amount > DAILY_LIMIT) {
-			throw new exceptions.DailyLimitExceededException();
+			throw new DailyLimitExceededException();
 		}
 	}
 }
+
 package model.entity;
 
 public class Address {
@@ -397,83 +397,91 @@ public class CurrentAccount extends Account {
 }
 package model.entity;
 
+import java.util.Objects;
+
 public class Customer {
-    
-    // 1. Fields (private, final everywhere)
-    private final int custId;
-    private String custName;
-    private final BankAccount custAcc;
-    private Address custAddr;
-    
-    // 2. Constructor with validation
-    public Customer(int custId, String custName, BankAccount custAcc, Address custAddr) {
-        if (custId <= 0) throw new IllegalArgumentException("Customer ID must be positive");
-        if (custName == null || custName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Customer name cannot be empty");
-        }
-        if (custAcc == null) throw new IllegalArgumentException("Account required");
-        if (custAddr == null) throw new IllegalArgumentException("Address required");
-        
-        this.custId = custId;
-        this.custName = custName.trim();
-        this.custAcc = custAcc;
-        this.custAddr = custAddr;
-    }
-    
-    // 3. Getters 
-    public int getCustId() {
-        return custId;
-    }
-    
-    public String getCustName() {
-        return custName;
-    }
-    
-    public BankAccount getCustAcc() {
-        return custAcc;
-    }
-    
-    public Address getCustAddr() {
-        return custAddr;
-    }
-    
-    //4.setters
-    public void setCustName(String custName) {
-        if (custName == null || custName.trim().isEmpty() || custName.length() < 2 || custName.length() > 50) {
-            throw new IllegalArgumentException("Valid name (2-50 chars) required");
-        }
-        this.custName = custName.trim();
-        System.out.println("✅ Name updated to: " + this.custName);
-    }
-    
-    public void setCustAddr(Address custAddr) {
-        if (custAddr == null) throw new IllegalArgumentException("Address required");
-        this.custAddr = custAddr;
-        System.out.println("✅ Address updated");
-    }
-    
-    // 5. Professional toString()
-    @Override
-    public String toString() {
-        return String.format("ID:%-4d %-15s | %-35s | %s", 
-            custId, custName, custAcc, custAddr);
-    }
-    
-    // 6. equals() + hashCode() for uniqueness
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Customer)) return false;
-        
-        Customer other = (Customer) obj;
-        return custId == other.custId;
-    }
-    
-    @Override
-    public int hashCode() {
-        return custId;
-    }
+
+	// 1. Fields (private, final everywhere)
+	private final int custId;
+	private String custName;
+	private final BankAccount custAcc;
+	private Address custAddr;
+
+	// 2. Constructor with validation
+	public Customer(int custId, String custName, BankAccount custAcc, Address custAddr) {
+		if (custId <= 0) throw new IllegalArgumentException("Customer ID must be positive");
+		if (custName == null || custName.trim().isEmpty()) {
+			throw new IllegalArgumentException("Customer name cannot be empty");
+		}
+		if (custAcc == null) throw new IllegalArgumentException("Account required");
+		if (custAddr == null) throw new IllegalArgumentException("Address required");
+
+		this.custId = custId;
+		this.custName = custName.trim();
+		this.custAcc = custAcc;
+		this.custAddr = custAddr;
+	}
+
+	// 3. Getters 
+	public int getCustId() {
+		return custId;
+	}
+
+	public String getCustName() {
+		return custName;
+	}
+
+	public BankAccount getCustAcc() {
+		return custAcc;
+	}
+
+	public Address getCustAddr() {
+		return custAddr;
+	}
+
+	//4.setters
+	public void setCustName(String custName) {
+		if (custName == null || custName.trim().isEmpty() || custName.length() < 2 || custName.length() > 50) {
+			throw new IllegalArgumentException("Valid name (2-50 chars) required");
+		}
+		this.custName = custName.trim();
+		System.out.println("✅ Name updated to: " + this.custName);
+	}
+
+	public void setCustAddr(Address custAddr) {
+		if (custAddr == null) throw new IllegalArgumentException("Address required");
+		this.custAddr = custAddr;
+		System.out.println("✅ Address updated");
+	}
+
+	// 5. Professional toString()
+	@Override
+	public String toString() {
+		return String.format("ID:%-4d %-15s | %-35s | %s", 
+				custId, custName, custAcc, custAddr);
+	}
+
+	// 6. equals() + hashCode() for uniqueness
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (!(obj instanceof Customer)) return false;
+		return custId == ((Customer) obj).custId;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(custId);
+	}
+
+	public int compareTo(Customer other) {
+		return Integer.compare(this.custId, other.custId);
+	}
+
+
+
 }
+
 package model.entity;
 
 import exceptions.InvalidIFSCException;
@@ -637,115 +645,202 @@ public enum TransactionType {
 }
 package service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import exceptions.*;
 import model.entity.*;
 import ui.InputHandler;
 import util.BankConstants;
 
 public class BankServices {
-	private final List<Customer> custlist = new ArrayList<>();
+    private final List<Customer> custlist = new ArrayList<>();
+    private final Map<Integer, Customer> custIdCache = new HashMap<>();
+    private final Map<Integer, Customer> accNoCache = new HashMap<>();
 
-	// CORE BUSINESS METHODS ONLY
-	public void addAccount(InputHandler input) throws Exception {
-		Customer customer = input.createCustomer();
-		if (hasDuplicate(customer)) {
-			throw new DuplicateAccountException(customer.getCustAcc().getAccNo());
-		}
-		custlist.add(customer);
-		System.out.println("✅ Account created: " + customer.getCustName());
-	}
+    public void addAccount(InputHandler input) throws Exception {
+        Customer customer = input.createCustomer();
+        if (hasDuplicate(customer)) {
+            throw new DuplicateAccountException(customer.getCustAcc().getAccNo());
+        }
+        custlist.add(customer);
+        updateCaches(customer);
+        System.out.println("✅ Account created: " + customer.getCustName());
+    }
 
-	public void deleteCustomer(int custId) throws AccountNotFoundException {
-		Customer cust = findById(custId);
-		custlist.remove(cust);
-	}
+    public void deleteCustomer(int custId) throws AccountNotFoundException {
+        Customer cust = findById(custId);
+        custlist.remove(cust);
+        custIdCache.remove(custId);
+        accNoCache.remove(cust.getCustAcc().getAccNo());
+    }
 
-	public void displayAllAccounts() {
-		if (custlist.isEmpty()) {
-			System.out.println("No accounts found!");
-			return;
-		}
-		System.out.println("\n=== ALL ACCOUNTS ===");
-		System.out.println("ID | Name | Account | City");
-		System.out.println("------------------------------------------");
-		custlist.forEach(c -> 
-		System.out.printf("%-2d | %-12s | %-30s | %s%n", 
-				c.getCustId(), c.getCustName(), c.getCustAcc(), c.getCustAddr().getCity()));
-	}
+    public void displayAllAccounts() {
+        if (custlist.isEmpty()) {
+            System.out.println("No accounts found!");
+            return;
+        }
+        System.out.println("\n=== ALL ACCOUNTS ===");
+        System.out.println("ID | Name          | Account              | City");
+        System.out.println("-----------------------------------------------");
+        
+        List<Customer> displayList = custlist.stream()
+            .limit(BankConstants.MAX_DISPLAY_ACCOUNTS)
+            .collect(Collectors.toList());
+            
+        displayList.forEach(c -> 
+            System.out.printf("%-2d | %-12s | %-22s | %s%n", 
+                c.getCustId(), c.getCustName(), c.getCustAcc(), c.getCustAddr().getCity()));
+                
+        if (custlist.size() > BankConstants.MAX_DISPLAY_ACCOUNTS) {
+            System.out.println("... and " + (custlist.size() - BankConstants.MAX_DISPLAY_ACCOUNTS) + " more");
+        }
+    }
 
-	public Customer findById(int id) throws AccountNotFoundException {
-		return custlist.stream()
-				.filter(c -> c.getCustId() == id)
-				.findFirst()
-				.orElseThrow(() -> new AccountNotFoundException(id));
-	}
+    public Customer findById(int id) throws AccountNotFoundException {
+        Customer cached = custIdCache.get(id);
+        if (cached != null) {
+            return cached;
+        }
+        
+        Customer customer = custlist.stream()
+            .filter(c -> c.getCustId() == id)
+            .findFirst()
+            .orElseThrow(() -> new AccountNotFoundException(id));
+        
+        custIdCache.put(id, customer);
+        return customer;
+    }
 
-	public void deposit(int custId, double amount) throws Exception {
-		Customer cust = findById(custId);
-		cust.getCustAcc().deposit(amount);
-	}
+    public Customer findByAccNo(int accNo) throws AccountNotFoundException {
+        Customer cached = accNoCache.get(accNo);
+        if (cached != null) {
+            return cached;
+        }
+        
+        Customer customer = custlist.stream()
+            .filter(c -> c.getCustAcc().getAccNo() == accNo)
+            .findFirst()
+            .orElseThrow(() -> new AccountNotFoundException(accNo));
+        
+        accNoCache.put(accNo, customer);
+        return customer;
+    }
 
-	public void withdraw(int custId, double amount) throws Exception {
-		Customer cust = findById(custId);
-		cust.getCustAcc().withdraw(amount);
-	}
 
-	public void transfer(int fromCustId, int toCustId, double amount) throws Exception {
-		if (fromCustId == toCustId) {
-			throw new IllegalArgumentException("Cannot transfer to same account");
-		}
+    public void deposit(int custId, double amount) throws Exception {
+        Customer cust = findById(custId);
+        cust.getCustAcc().deposit(amount);
+    }
 
-		Customer fromCust = findById(fromCustId);
-		Customer toCust = findById(toCustId);
+    public void withdraw(int custId, double amount) throws Exception {
+        Customer cust = findById(custId);
+        cust.getCustAcc().withdraw(amount);
+    }
 
-		BankAccount fromAcc = fromCust.getCustAcc();
-		BankAccount toAcc = toCust.getCustAcc();
+    public void transfer(int fromCustId, int toCustId, double amount) throws Exception {
+        if (fromCustId == toCustId) {
+            throw new IllegalArgumentException("Cannot transfer to same account");
+        }
 
-		System.out.println("\n💰 TRANSFERRING ₹" + String.format("%.2f", amount));
-		System.out.println("From: " + fromCust.getCustName() + " (Acc: " + fromAcc.getAccNo() + ")");
-		System.out.println("To:   " + toCust.getCustName() + " (Acc: " + toAcc.getAccNo() + ")");
+        Customer fromCust = findById(fromCustId);
+        Customer toCust = findById(toCustId);
 
-		boolean withdrawn = false;
-		try {
-			fromAcc.withdraw(amount);
-			withdrawn = true;
-			toAcc.deposit(amount);
-			System.out.println("✅ Transfer successful!");
-		} catch (Exception e) {
-			if (withdrawn) {
-				try {
-					fromAcc.deposit(amount);
-					System.out.println("↩️ Transfer rolled back.");
-				} catch (Exception ex) {
-					System.out.println("⚠️ CRITICAL: Rollback failed!");
-				}
-			}
-			throw e;
-		}
-	}
-	public void addInterestToAllAccounts() {
-		if (custlist.isEmpty()) return;
-		System.out.println("\n=== ADDING INTEREST ===");
-		custlist.forEach(c -> ((Account) c.getCustAcc()).addInterestToBalance());
-	}
+        BankAccount fromAcc = fromCust.getCustAcc();
+        BankAccount toAcc = toCust.getCustAcc();
 
-	public void printStatement(int custId, int count) throws AccountNotFoundException {
-		Customer cust = findById(custId);
-		((Account) cust.getCustAcc()).printStatement(Math.min(count, BankConstants.MAX_STATEMENT));
-	}
+        System.out.println("\n💰 TRANSFERRING ₹" + String.format("%.2f", amount));
+        System.out.println("From: " + fromCust.getCustName() + " (Acc: " + fromAcc.getAccNo() + ")");
+        System.out.println("To:   " + toCust.getCustName() + " (Acc: " + toAcc.getAccNo() + ")");
 
-	public List<Customer> getAllCustomers() {
-		return new ArrayList<>(custlist);
-	}
+        boolean withdrawn = false;
+        try {
+            fromAcc.withdraw(amount);
+            withdrawn = true;
+            toAcc.deposit(amount);
+            System.out.println("✅ Transfer successful!");
+        } catch (Exception e) {
+            if (withdrawn) {
+                try {
+                    fromAcc.deposit(amount);
+                    System.out.println("↩️ Transfer rolled back.");
+                } catch (Exception ex) {
+                    System.out.println("⚠️ CRITICAL: Rollback failed!");
+                }
+            }
+            throw e;
+        }
+    }
 
-	private boolean hasDuplicate(Customer customer) {
-		return custlist.stream().anyMatch(c -> 
-		c.getCustId() == customer.getCustId() || 
-		c.getCustAcc().getAccNo() == customer.getCustAcc().getAccNo());
-	}
+    public void addInterestToAllAccounts() {
+        if (custlist.isEmpty()) return;
+        System.out.println("\n=== ADDING INTEREST ===");
+        custlist.forEach(c -> {
+            try {
+                ((Account) c.getCustAcc()).addInterestToBalance();
+            } catch (Exception e) {
+                System.out.println("⚠️ Interest failed for " + c.getCustName() + ": " + e.getMessage());
+            }
+        });
+    }
+
+    public void printStatement(int custId, int count) throws AccountNotFoundException {
+        Customer cust = findById(custId);
+        ((Account) cust.getCustAcc()).printStatement(Math.min(count, BankConstants.MAX_STATEMENT));
+    }
+
+    public List<Customer> getAllCustomers() {
+        return new ArrayList<>(custlist);
+    }
+
+    private boolean hasDuplicate(Customer customer) {
+        return custIdCache.containsKey(customer.getCustId()) ||
+               accNoCache.containsKey(customer.getCustAcc().getAccNo());
+    }
+
+    private void updateCaches(Customer customer) {
+        custIdCache.put(customer.getCustId(), customer);
+        accNoCache.put(customer.getCustAcc().getAccNo(), customer);
+    }
+
+    public void showDashboard() {
+        if (custlist.isEmpty()) {
+            System.out.println("🏦 BANK DASHBOARD - No accounts yet!");
+            return;
+        }
+        
+        double totalBalance = custlist.stream()
+            .mapToDouble(c -> c.getCustAcc().getBalance())
+            .sum();
+            
+        double avgBalance = totalBalance / custlist.size();
+        long highBalanceAccounts = custlist.stream()
+            .filter(c -> c.getCustAcc().getBalance() > BankConstants.HIGH_BALANCE_THRESHOLD)
+            .count();
+        
+        System.out.println("\n🏦 ═══════════════════════════════════════════════");
+        System.out.println("                    BANK DASHBOARD");
+        System.out.println("   ═══════════════════════════════════════════════");
+        System.out.printf("   📊 Customers      : %d%n", custlist.size());
+        System.out.printf("   💰 Total Balance  : ₹%,.2f%n", totalBalance);
+        System.out.printf("   📈 Avg Balance    : ₹%,.2f%n", avgBalance);
+        System.out.printf("   ⚠️  High Balance  : %d (>%s)%n", 
+            highBalanceAccounts, "₹5,000");
+        
+        // Top customer
+        Customer top = custlist.stream()
+            .max(Comparator.comparingDouble(c -> c.getCustAcc().getBalance()))
+            .orElse(null);
+        if (top != null) {
+            System.out.printf("   👑 Top Customer   : %s (₹%,.2f)%n", 
+                top.getCustName(), top.getCustAcc().getBalance());
+        }
+        
+        System.out.println("   ═══════════════════════════════════════════════");
+        System.out.println("Press Enter to continue...");
+        try { System.in.read(); } catch (Exception e) {}
+    }
 }
+
 package ui;
 
 import java.util.Scanner;
@@ -1030,7 +1125,10 @@ public class InputHandler {
 
 package util;
 
-public interface BankConstants {
-    int MAX_STATEMENT = 50;
-    double MIN_BALANCE = 1000.0;
+public class BankConstants {
+    public static final double MIN_BALANCE = 1000.0;
+    public static final int MAX_STATEMENT = 50;
+    public static final int MAX_DISPLAY_ACCOUNTS = 20;  // ADD THIS
+    public static final double HIGH_BALANCE_THRESHOLD = 5000.0;  // ADD THIS
 }
+
